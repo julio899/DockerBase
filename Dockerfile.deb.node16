@@ -1,0 +1,45 @@
+# Usar una imagen base de Debian
+FROM debian:latest
+
+# Actualizar la lista de paquetes y limpiar el caché
+RUN apt-get update && apt-get install -y nano curl git wget make build-essential bash python3
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.0/install.sh | bash
+RUN . ~/.profile
+
+# Instalar nvm
+ENV NVM_DIR=/root/.nvm
+RUN . $NVM_DIR/nvm.sh \
+    && nvm install 16 \
+    && nvm alias default 16 \
+    && nvm use default
+
+# Asegurarse de que nvm esté disponible en el PATH
+ENV PATH=$NVM_DIR/versions/node/v16.20.0/bin:$PATH
+
+# Cargar el entorno de nvm y npm
+RUN . $NVM_DIR/nvm.sh && npm install -g yarn pm2
+
+RUN rm -rf /var/lib/apt/lists/*
+
+
+# Expone el puerto que Nuxt.js utilizará
+EXPOSE 3131
+EXPOSE 3030
+EXPOSE 24678
+ENV NUXT_HOST=0.0.0.0
+ENV NUXT_PORT=3131
+
+# Comando para mantener el contenedor en ejecución
+CMD ["tail", "-f", "/dev/null"]
+
+# CREATE NETWORK
+# docker network create -d bridge app
+
+# BUILD IMG
+# docker build -f Dockerfile.deb.node16 -t debian-base .
+
+# RUN Instance
+# docker run --rm -d --name=pm2-front -p 3131:3131 -v /home/ng-front:/home/ng-front --network app debian-base:latest
+
+# ENTER to Instance
+# docker exec -it pm2-front /bin/bash
